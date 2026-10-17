@@ -38,17 +38,18 @@ const (
 )
 
 // classify sets Section and Reason on every chapter. The book is split in
-// three consecutive runs: front matter, body, back matter.
-func classify(chs []Chapter, l *lang.Language, opts Options) error {
+// three consecutive runs: front matter, body, back matter. It checks
+// everything before changing a chapter, so on error nothing is changed.
+func classify(chs []Chapter, l *lang.Language, bodyFrom, backFrom int) error {
 	n := len(chs)
-	for _, v := range []int{opts.BodyFrom, opts.BackFrom} {
+	for _, v := range []int{bodyFrom, backFrom} {
 		if v < 0 || v > n {
 			return fmt.Errorf("chapter %d does not exist (the book has %d)", v, n)
 		}
 	}
 
-	bodyStart, bodyReason := findBodyStart(chs, l, opts)
-	backStart, backReason := findBackStart(chs, l, opts, bodyStart)
+	bodyStart, bodyReason := findBodyStart(chs, l, bodyFrom)
+	backStart, backReason := findBackStart(chs, l, backFrom, bodyStart)
 	if backStart < bodyStart {
 		return fmt.Errorf("back matter (chapter %d) starts before the body (chapter %d)", backStart+1, bodyStart+1)
 	}
@@ -76,9 +77,9 @@ func classify(chs []Chapter, l *lang.Language, opts Options) error {
 	return nil
 }
 
-func findBodyStart(chs []Chapter, l *lang.Language, opts Options) (int, string) {
-	if opts.BodyFrom > 0 {
-		return opts.BodyFrom - 1, "set with -body-from"
+func findBodyStart(chs []Chapter, l *lang.Language, bodyFrom int) (int, string) {
+	if bodyFrom > 0 {
+		return bodyFrom - 1, "set manually"
 	}
 	for i, c := range chs {
 		if slices.Contains(c.Types, "bodymatter") {
@@ -93,9 +94,9 @@ func findBodyStart(chs []Chapter, l *lang.Language, opts Options) (int, string) 
 	return 0, "no story text recognised"
 }
 
-func findBackStart(chs []Chapter, l *lang.Language, opts Options, bodyStart int) (int, string) {
-	if opts.BackFrom > 0 {
-		return opts.BackFrom - 1, "set with -back-from"
+func findBackStart(chs []Chapter, l *lang.Language, backFrom, bodyStart int) (int, string) {
+	if backFrom > 0 {
+		return backFrom - 1, "set manually"
 	}
 	seen := map[string]bool{}
 	for i := bodyStart; i < len(chs); i++ {

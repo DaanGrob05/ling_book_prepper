@@ -112,10 +112,17 @@ func Load(path string, opts Options) (*Book, error) {
 	if len(b.Chapters) == 0 {
 		return nil, fmt.Errorf("%s: no text found", path)
 	}
-	if err := classify(b.Chapters, l, opts); err != nil {
+	if err := b.Classify(opts.BodyFrom, opts.BackFrom); err != nil {
 		return nil, err
 	}
 	return b, nil
+}
+
+// Classify sorts the chapters into front matter, body and back matter
+// again. bodyFrom and backFrom force the first body and first back matter
+// chapter (1-based); 0 means detect. On error the chapters are unchanged.
+func (b *Book) Classify(bodyFrom, backFrom int) error {
+	return classify(b.Chapters, b.Language, bodyFrom, backFrom)
 }
 
 // read picks a reader based on the file extension. A plain-text reader can

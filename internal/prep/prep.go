@@ -66,6 +66,17 @@ func (r *Result) SetMaxWords(maxWords int) error {
 	return nil
 }
 
+// Reclassify changes where the body and the back matter start (1-based
+// chapter numbers, 0 = detect) and rebuilds the lessons. Like SetMaxWords
+// it doesn't read the book again. On error nothing changes.
+func (r *Result) Reclassify(bodyFrom, backFrom int) error {
+	if err := r.Book.Classify(bodyFrom, backFrom); err != nil {
+		return err
+	}
+	r.Lessons = lesson.Build(r.Book, r.MaxWords)
+	return nil
+}
+
 // Oversized returns the lessons over the word limit. That only happens when
 // a single sentence is longer than the limit, since lessons never end
 // mid-sentence.

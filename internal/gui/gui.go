@@ -58,6 +58,12 @@ type ui struct {
 	outDir   *widget.Entry
 	write    *widget.Button
 
+	// classification widgets, see classify.go
+	bodyHere *widget.Button
+	backHere *widget.Button
+	detect   *widget.Button
+	selected int // selected chapter row, -1 for none
+
 	path   string       // the open book
 	opts   prep.Options // options it was loaded with
 	result *prep.Result // nil until a book is loaded
@@ -88,7 +94,7 @@ func newUI(win fyne.Window) *ui {
 		},
 		func(row, col int) string { return lessonCell(u.result, row, col) })
 	u.tabs = container.NewAppTabs(
-		container.NewTabItem("Chapters", u.chapters),
+		container.NewTabItem("Chapters", container.NewBorder(u.newClassifyBar(), nil, nil, nil, u.chapters)),
 		container.NewTabItem("Lessons", u.lessons),
 	)
 
@@ -145,6 +151,10 @@ func (u *ui) open(path string) {
 	u.loads++
 	load := u.loads
 	opts := u.opts
+	if path != u.path {
+		// Chapter numbers of one book mean nothing for another.
+		opts.BodyFrom, opts.BackFrom = 0, 0
+	}
 	u.file.SetText(path)
 	u.info.SetText("Loading…")
 	u.write.Disable()
@@ -167,9 +177,14 @@ func (u *ui) open(path string) {
 			if path != u.path {
 				u.outDir.SetText(prep.DirNextTo(path))
 				u.tabs.SelectIndex(0)
+				u.chapters.UnselectAll()
 				u.chapters.ScrollToTop()
 				u.lessons.ScrollToTop()
 			}
+			if u.opts.MaxWords != 0 && u.opts.MaxWords != r.MaxWords {
+				r.SetMaxWords(u.opts.MaxWords) // changed while loading
+			}
+			u.opts.BodyFrom, u.opts.BackFrom = opts.BodyFrom, opts.BackFrom
 			u.path, u.result = path, r
 			u.show()
 		})
@@ -191,6 +206,7 @@ func (u *ui) show() {
 	u.main.Refresh()
 	u.settings.Show()
 	u.updateWrite()
+	u.updateClassifyBar()
 }
 
 func orDash(s string) string {
