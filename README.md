@@ -48,6 +48,7 @@ Build for another OS with e.g. `GOOS=windows GOARCH=amd64 go build ./cmd/lingqpr
 | `internal/lang`    | Language rules: abbreviations, quotes, front/back matter titles      |
 | `internal/book`    | Ties it together: load, repair, classify front/body/back             |
 | `internal/lesson`  | Splits chapters into lessons and writes the files                    |
+| `internal/prep`    | The API the front ends share: options in, lessons out, write to disk |
 | `cmd/lingqprep`    | The command-line interface                                           |
 
 **Repairing sentences.** Each paragraph is glued to the previous one unless the
@@ -63,6 +64,5 @@ count numbers, so they come out a few words above LingQ's count, never below.
 - **New language:** add `internal/lang/<code>.go` modelled on `fr.go`.
 - **Plain-text input:** add a reader that returns a `source.Book` and hook it
   up in `book.read`.
-- **GUI:** the CLI only calls `book.Load`, `lesson.Build` and `lesson.Write`;
-  a GUI (e.g. Fyne or Wails) can call the same functions, and one binary can
-  start the GUI when run without arguments.
+- **GUI:** the CLI only calls `prep.Load` and `Result.Write`; a GUI calls the
+  same functions, so both front ends behave the same.

@@ -121,6 +121,10 @@ func onlyHeadings(blocks []prose.Block) bool {
 	return true
 }
 
+// ErrNotEmpty is returned by Write when the output directory already has
+// files in it. Check for it with errors.Is.
+var ErrNotEmpty = errors.New("output directory is not empty")
+
 // Write saves the lessons as text files in dir. It refuses to write into a
 // non-empty directory unless overwrite is set, so old lessons from another
 // run don't get mixed in by accident.
@@ -134,7 +138,7 @@ func Write(dir string, lessons []Lesson, overwrite bool) error {
 	case err != nil:
 		return err
 	case len(entries) > 0 && !overwrite:
-		return fmt.Errorf("output directory %s is not empty (use -force to overwrite)", dir)
+		return fmt.Errorf("%w: %s", ErrNotEmpty, dir)
 	}
 	for _, l := range lessons {
 		if err := os.WriteFile(filepath.Join(dir, l.FileName()), []byte(l.Text), 0o644); err != nil {
