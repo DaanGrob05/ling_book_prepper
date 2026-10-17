@@ -21,6 +21,7 @@ const usage = `lingqprep prepares ebooks for LingQ.
 Usage:
   lingqprep [flags] book.epub        write the lessons to ./<book>/
   lingqprep list [flags] book.epub   show the chapters and how they were classified
+  lingqprep gui                      open the graphical interface
 
 Run "lingqprep -h" or "lingqprep list -h" to see the flags.
 `
@@ -30,11 +31,14 @@ func main() {
 		fmt.Fprint(os.Stderr, usage)
 		os.Exit(2)
 	}
-	// Preparing a book is the default; "list" is the only subcommand.
+	// Preparing a book is the default; "list" and "gui" are the subcommands.
 	var err error
-	if os.Args[1] == "list" {
+	switch os.Args[1] {
+	case "list":
 		err = runList(os.Args[2:])
-	} else {
+	case "gui":
+		err = runGUI(os.Args[2:])
+	default:
 		err = runPrepare(os.Args[1:])
 	}
 	if err != nil {

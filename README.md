@@ -13,10 +13,25 @@ Prepares ebooks for import into [LingQ](https://www.lingq.com):
 
 Currently supports French.
 
+## Building
+
+The GUI uses [Fyne](https://fyne.io), which needs cgo, so building needs a C
+compiler and the graphics headers. On Debian/Ubuntu:
+
+```sh
+sudo apt install gcc libgl1-mesa-dev xorg-dev libwayland-dev libxkbcommon-dev wayland-protocols
+go build -o lingqprep ./cmd/lingqprep
+```
+
+The first build takes a few minutes; later builds are cached. For a
+command-line-only binary that needs no C compiler, build with
+`CGO_ENABLED=0 go build -tags nogui -o lingqprep ./cmd/lingqprep`.
+
 ## Usage
 
 ```sh
-go build -o lingqprep ./cmd/lingqprep
+# Open the graphical interface
+./lingqprep gui
 
 # See how the book was split into front matter, chapters and back matter
 ./lingqprep list book.epub
@@ -36,8 +51,6 @@ correct them:
 Other flags: `-lang fr`, `-max-words 6000`, `-force` (write into a
 non-empty directory). Run `lingqprep -h` for the full list.
 
-Build for another OS with e.g. `GOOS=windows GOARCH=amd64 go build ./cmd/lingqprep`.
-
 ## How it works
 
 | Package            | Job                                                                 |
@@ -49,7 +62,8 @@ Build for another OS with e.g. `GOOS=windows GOARCH=amd64 go build ./cmd/lingqpr
 | `internal/book`    | Ties it together: load, repair, classify front/body/back             |
 | `internal/lesson`  | Splits chapters into lessons and writes the files                    |
 | `internal/prep`    | The API the front ends share: options in, lessons out, write to disk |
-| `cmd/lingqprep`    | The command-line interface                                           |
+| `internal/gui`     | The graphical interface (Fyne)                                       |
+| `cmd/lingqprep`    | The command-line interface; `lingqprep gui` starts the GUI           |
 
 **Repairing sentences.** Each paragraph is glued to the previous one unless the
 previous one clearly ended a sentence (`.`, `!`, `?`, `…`, closing quote), the
