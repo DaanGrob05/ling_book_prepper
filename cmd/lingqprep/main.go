@@ -21,7 +21,7 @@ const usage = `lingqprep prepares ebooks for LingQ.
 Usage:
   lingqprep [flags] book.epub        write the lessons to ./<book>/
   lingqprep list [flags] book.epub   show the chapters and how they were classified
-  lingqprep gui                      open the graphical interface
+  lingqprep gui [book.epub]          open the graphical interface
 
 Run "lingqprep -h" or "lingqprep list -h" to see the flags.
 `

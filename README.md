@@ -30,8 +30,9 @@ command-line-only binary that needs no C compiler, build with
 ## Usage
 
 ```sh
-# Open the graphical interface
+# Open the graphical interface (optionally with a book)
 ./lingqprep gui
+./lingqprep gui book.epub
 
 # See how the book was split into front matter, chapters and back matter
 ./lingqprep list book.epub

@@ -13,9 +13,9 @@ func runGUI(args []string) error {
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
-	if fs.NArg() > 0 {
-		return fmt.Errorf("gui takes no arguments, got %q", fs.Args())
+	if fs.NArg() > 1 {
+		return fmt.Errorf("expected at most one book file, got %d", fs.NArg())
 	}
-	gui.Run()
+	gui.Run(fs.Arg(0)) // Arg returns "" when there is no file
 	return nil
 }
