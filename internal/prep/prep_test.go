@@ -4,6 +4,7 @@ import (
 	"errors"
 	"testing"
 
+	"lingqprep/internal/book"
 	"lingqprep/internal/lesson"
 )
 
@@ -17,6 +18,22 @@ func TestDefaultDir(t *testing.T) {
 		if got := DefaultDir(in); got != want {
 			t.Errorf("DefaultDir(%q) = %q, want %q", in, got, want)
 		}
+	}
+}
+
+func TestDirNextTo(t *testing.T) {
+	if got, want := DirNextTo("/home/me/Books/Tome 1.epub"), "/home/me/Books/Tome 1"; got != want {
+		t.Errorf("DirNextTo = %q, want %q", got, want)
+	}
+}
+
+func TestSetMaxWords(t *testing.T) {
+	r := &Result{Book: &book.Book{}, MaxWords: 6000}
+	if err := r.SetMaxWords(0); err == nil {
+		t.Error("SetMaxWords(0) accepted")
+	}
+	if err := r.SetMaxWords(3000); err != nil || r.MaxWords != 3000 {
+		t.Errorf("SetMaxWords(3000): err %v, MaxWords %d", err, r.MaxWords)
 	}
 }
 

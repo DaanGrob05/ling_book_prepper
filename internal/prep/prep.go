@@ -55,6 +55,17 @@ func Load(path string, opts Options) (*Result, error) {
 	return &Result{Book: b, Lessons: lesson.Build(b, opts.MaxWords), MaxWords: opts.MaxWords}, nil
 }
 
+// SetMaxWords rebuilds the lessons with a new word limit. That is much
+// faster than Load because the book is not read and repaired again.
+func (r *Result) SetMaxWords(maxWords int) error {
+	if maxWords < 1 {
+		return fmt.Errorf("maximum words per lesson must be positive, got %d", maxWords)
+	}
+	r.MaxWords = maxWords
+	r.Lessons = lesson.Build(r.Book, maxWords)
+	return nil
+}
+
 // Oversized returns the lessons over the word limit. That only happens when
 // a single sentence is longer than the limit, since lessons never end
 // mid-sentence.
@@ -77,4 +88,11 @@ func (r *Result) Write(dir string, overwrite bool) error {
 // its file name without extension, relative to the current directory.
 func DefaultDir(path string) string {
 	return strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
+}
+
+// DirNextTo is the GUI's output directory for the book at path: a folder
+// named after the book, next to it. A program started from a menu has no
+// meaningful current directory, so DefaultDir would be a poor choice there.
+func DirNextTo(path string) string {
+	return filepath.Join(filepath.Dir(path), DefaultDir(path))
 }

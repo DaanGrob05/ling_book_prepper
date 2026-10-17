@@ -43,12 +43,23 @@ func Run(path string) {
 // every callback on its main goroutine, so the fields need no locking as
 // long as background work hands its results back with fyne.Do.
 type ui struct {
-	win    fyne.Window
-	file   *widget.Label   // path of the open book
-	info   *widget.Label   // title, author, counts
-	main   *fyne.Container // the placeholder or the chapter table
-	table  *widget.Table
-	path   string
+	win      fyne.Window
+	file     *widget.Label   // path of the open book
+	info     *widget.Label   // title, author, counts
+	main     *fyne.Container // the placeholder or the tabs
+	tabs     *container.AppTabs
+	chapters *widget.Table
+	lessons  *widget.Table
+	settings fyne.CanvasObject
+
+	// settings widgets, see settings.go
+	language *widget.Select
+	maxWords *widget.Entry
+	outDir   *widget.Entry
+	write    *widget.Button
+
+	path   string       // the open book
+	opts   prep.Options // options it was loaded with
 	result *prep.Result // nil until a book is loaded
 	loads  int          // counts open calls, to drop results of stale loads
 }
@@ -60,24 +71,46 @@ func newUI(win fyne.Window) *ui {
 		info: widget.NewLabel(""),
 	}
 	u.file.Truncation = fyne.TextTruncateEllipsis
-	u.table = newChapterTable(func() *prep.Result { return u.result })
+	u.chapters = newTable(chapterColumns,
+		func() int {
+			if u.result == nil {
+				return 0
+			}
+			return len(u.result.Book.Chapters)
+		},
+		func(row, col int) string { return chapterCell(u.result, row, col) })
+	u.lessons = newTable(lessonColumns,
+		func() int {
+			if u.result == nil {
+				return 0
+			}
+			return len(u.result.Lessons)
+		},
+		func(row, col int) string { return lessonCell(u.result, row, col) })
+	u.tabs = container.NewAppTabs(
+		container.NewTabItem("Chapters", u.chapters),
+		container.NewTabItem("Lessons", u.lessons),
+	)
 
 	placeholder := widget.NewLabel("Open an EPUB, or drop one on this window.")
 	placeholder.Alignment = fyne.TextAlignCenter
 	u.main = container.NewStack(container.NewCenter(placeholder))
+
+	u.settings = u.newSettings()
+	u.settings.Hide()
 
 	openButton := widget.NewButtonWithIcon("Open EPUB…", theme.FolderOpenIcon(), u.chooseFile)
 	top := container.NewVBox(
 		container.NewBorder(nil, nil, openButton, nil, u.file),
 		u.info,
 	)
-	win.SetContent(container.NewBorder(top, nil, nil, nil, u.main))
+	win.SetContent(container.NewBorder(top, u.settings, nil, nil, u.main))
 	win.SetOnDropped(func(_ fyne.Position, uris []fyne.URI) {
 		if len(uris) > 0 {
 			u.open(uris[0].Path())
 		}
 	})
-	win.Resize(fyne.NewSize(900, 650))
+	win.Resize(fyne.NewSize(900, 700))
 	return u
 }
 
@@ -106,14 +139,17 @@ func (u *ui) chooseFile() {
 }
 
 // open loads the book at path in the background so the window stays
-// responsive, then shows it.
+// responsive, then shows it. It is also used to reload the open book when
+// an option that affects loading changes.
 func (u *ui) open(path string) {
 	u.loads++
 	load := u.loads
+	opts := u.opts
 	u.file.SetText(path)
 	u.info.SetText("Loading…")
+	u.write.Disable()
 	go func() {
-		r, err := prep.Load(path, prep.Options{})
+		r, err := prep.Load(path, opts)
 		// Widgets may only be changed on the main goroutine.
 		fyne.Do(func() {
 			if load != u.loads {
@@ -121,12 +157,18 @@ func (u *ui) open(path string) {
 			}
 			if err != nil {
 				u.info.SetText("")
-				if u.path != "" {
+				if u.result != nil {
 					u.file.SetText(u.path) // keep showing the previous book
 					u.show()
 				}
 				dialog.ShowError(err, u.win)
 				return
+			}
+			if path != u.path {
+				u.outDir.SetText(prep.DirNextTo(path))
+				u.tabs.SelectIndex(0)
+				u.chapters.ScrollToTop()
+				u.lessons.ScrollToTop()
 			}
 			u.path, u.result = path, r
 			u.show()
@@ -134,16 +176,21 @@ func (u *ui) open(path string) {
 	}()
 }
 
-// show displays the loaded book.
+// show displays the loaded book. It is called again whenever the lessons
+// change.
 func (u *ui) show() {
 	b := u.result.Book
 	u.win.SetTitle(orDash(b.Title) + " — " + appName)
 	u.info.SetText(fmt.Sprintf("%s — %s · %s · %d chapters → %d lessons",
 		orDash(b.Title), orDash(b.Author), b.Language.Name, len(b.Chapters), len(u.result.Lessons)))
-	u.table.Refresh()
-	u.table.ScrollToTop()
-	u.main.Objects = []fyne.CanvasObject{u.table}
+	u.tabs.Items[1].Text = fmt.Sprintf("Lessons (%d)", len(u.result.Lessons))
+	u.tabs.Refresh()
+	u.chapters.Refresh()
+	u.lessons.Refresh()
+	u.main.Objects = []fyne.CanvasObject{u.tabs}
 	u.main.Refresh()
+	u.settings.Show()
+	u.updateWrite()
 }
 
 func orDash(s string) string {
