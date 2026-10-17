@@ -2,7 +2,10 @@ module lingqprep
 
 go 1.26.9
 
-require fyne.io/fyne/v2 v2.8.2
+require (
+	fyne.io/fyne/v2 v2.8.2
+	golang.org/x/term v0.29.0
+)
 
 require (
 	fyne.io/systray v1.12.3-0.20260810170012-af4e8e793ec4 // indirect

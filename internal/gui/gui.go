@@ -29,9 +29,11 @@ const appID = "io.github.daangrob05.lingqprep"
 const appName = "LingQ Prep"
 
 // Run opens the main window and blocks until it is closed. If path is not
-// empty that book is opened straight away.
-func Run(path string) {
+// empty that book is opened straight away. icon is a PNG image for the
+// window and the app.
+func Run(path string, icon []byte) {
 	a := app.NewWithID(appID)
+	a.SetIcon(fyne.NewStaticResource("Icon.png", icon))
 	u := newUI(a.NewWindow(appName))
 	if path != "" {
 		u.open(path)

@@ -27,7 +27,38 @@ The first build takes a few minutes; later builds are cached. For a
 command-line-only binary that needs no C compiler, build with
 `CGO_ENABLED=0 go build -tags nogui -o lingqprep ./cmd/lingqprep`.
 
+## Packaging and installing (Linux)
+
+The installable app is made with Fyne's packaging tool. Its settings (name,
+app ID, version, icon) are in `cmd/lingqprep/FyneApp.toml`; `Icon.png` next
+to it is a placeholder until there is a real logo.
+
+```sh
+go install fyne.io/tools/cmd/fyne@latest
+cd cmd/lingqprep
+fyne package --os linux --release   # writes "LingQ Prep.tar.xz"
+```
+
+To install, extract the archive and run, inside the `lingqprep` folder:
+
+```sh
+make user-install      # for yourself, in ~/.local (no sudo needed)
+sudo make install      # or for all users, in /usr/local
+```
+
+That adds "LingQ Prep" to the app menu and puts the `lingqprep` command on
+the PATH, so the command line works too. `make user-uninstall` or
+`sudo make uninstall` removes it again.
+
+The binary only runs on systems with the same or a newer C library (glibc)
+as the one it was built on, so build releases on an older distribution (or
+with [fyne-cross](https://github.com/fyne-io/fyne-cross)) to support more
+systems.
+
 ## Usage
+
+Started from the app menu or by double-clicking, `lingqprep` opens its
+window. In a terminal:
 
 ```sh
 # Open the graphical interface (optionally with a book)

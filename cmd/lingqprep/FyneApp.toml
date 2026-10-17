@@ -1,0 +1,13 @@
+[Details]
+Icon = "Icon.png"
+Name = "LingQ Prep"
+ID = "io.github.daangrob05.lingqprep"
+Version = "0.1.0"
+Build = 2
+
+[LinuxAndBSD]
+GenericName = "Ebook preparer"
+Categories = ["Education", "Languages"]
+Comment = "Prepare ebooks for import into LingQ"
+Keywords = ["lingq", "epub", "ebook", "language"]
+ExecParams = " gui"

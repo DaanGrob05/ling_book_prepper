@@ -11,6 +11,8 @@ import (
 	"strings"
 	"text/tabwriter"
 
+	"golang.org/x/term"
+
 	"lingqprep/internal/lang"
 	"lingqprep/internal/lesson"
 	"lingqprep/internal/prep"
@@ -27,16 +29,18 @@ Run "lingqprep -h" or "lingqprep list -h" to see the flags.
 `
 
 func main() {
-	if len(os.Args) < 2 {
+	var err error
+	switch {
+	case len(os.Args) < 2 && hasGUI && !inTerminal():
+		// Started from an app menu or file manager: open the window.
+		err = runGUI(nil)
+	case len(os.Args) < 2:
 		fmt.Fprint(os.Stderr, usage)
 		os.Exit(2)
-	}
 	// Preparing a book is the default; "list" and "gui" are the subcommands.
-	var err error
-	switch os.Args[1] {
-	case "list":
+	case os.Args[1] == "list":
 		err = runList(os.Args[2:])
-	case "gui":
+	case os.Args[1] == "gui":
 		err = runGUI(os.Args[2:])
 	default:
 		err = runPrepare(os.Args[1:])
@@ -45,6 +49,13 @@ func main() {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}
+}
+
+// inTerminal reports whether the program was started from a terminal. A
+// program started from a menu or by double-clicking has neither its input
+// nor its error output connected to one.
+func inTerminal() bool {
+	return term.IsTerminal(int(os.Stdin.Fd())) || term.IsTerminal(int(os.Stderr.Fd()))
 }
 
 // loadFlags are shared by both commands.

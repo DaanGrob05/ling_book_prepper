@@ -1,3 +1,5 @@
 /lingqprep
 *.epub
 output/
+# packages made by "fyne package"
+*.tar.xz
