@@ -9,11 +9,11 @@ id=io.github.daangrob05.lingqprep
 bin="$HOME/.local/bin"
 share="${XDG_DATA_HOME:-$HOME/.local/share}"
 
-install -Dm755 usr/local/bin/lingqprep "$bin/lingqprep"
-install -Dm644 "usr/local/share/pixmaps/$id.png" "$share/icons/hicolor/512x512/apps/$id.png"
+install -Dm755 lingqprep "$bin/lingqprep"
+install -Dm644 "share/$id.png" "$share/icons/hicolor/512x512/apps/$id.png"
 # The menu entry must point to where the program now is.
 mkdir -p "$share/applications"
-sed "s|^Exec=lingqprep|Exec=$bin/lingqprep|" "usr/local/share/applications/$id.desktop" \
+sed "s|^Exec=lingqprep|Exec=$bin/lingqprep|" "share/$id.desktop" \
 	> "$share/applications/$id.desktop"
 update-desktop-database "$share/applications" 2>/dev/null || true
 

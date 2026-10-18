@@ -16,7 +16,7 @@ Works on Ubuntu 22.04, Debian 12, Linux Mint 21, Fedora 36 or newer.
 
 1. Download `LingQ-Prep-{{VERSION}}-Linux-x86_64.tar.xz`.
 2. Right-click the file and choose **Extract Here**.
-3. Open the extracted folder `LingQ-Prep-{{VERSION}}`, right-click in an empty spot and choose **Open in Terminal**.
-4. Type `./install.sh` and press Enter.
+3. Open the extracted folder `LingQ-Prep-{{VERSION}}`. To try the app without installing it, double-click `lingqprep`.
+4. To install it, right-click in an empty spot of the folder, choose **Open in Terminal**, type `./install.sh` and press Enter.
 
-**LingQ Prep** is now in your app menu. To remove it again, run `./uninstall.sh` the same way.
+**LingQ Prep** is now in your app menu, and the extracted folder can be deleted. To remove the app again, run `./uninstall.sh` the same way. The folder's `README.txt` explains the same steps.
