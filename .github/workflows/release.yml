@@ -1,0 +1,90 @@
+# Builds the app for every platform and creates a draft GitHub release when
+# a version tag is pushed:
+#
+#   v1.2.0         a normal release
+#   v1.2.0-beta.1  a pre-release
+#
+# Other tags are ignored. The draft is only visible to the repository's
+# owners until it is published by hand on the Releases page.
+name: Release
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-beta.[0-9]+"
+
+permissions:
+  contents: read
+
+jobs:
+  linux:
+    name: Linux x86_64
+    # The oldest supported runner, so the binary runs on older systems too
+    # (see packaging/linux/package.sh).
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod
+
+      - name: Install GUI build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gcc libgl1-mesa-dev xorg-dev libwayland-dev libxkbcommon-dev wayland-protocols
+
+      - name: Test
+        run: go test ./...
+
+      - name: Install the fyne packaging tool
+        run: go install fyne.io/tools/cmd/fyne@v1.7.3
+
+      - name: Package
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: packaging/linux/package.sh "${GITHUB_REF_NAME#v}" dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: linux-x86_64
+          path: dist/*
+          if-no-files-found: error
+
+  release:
+    name: Create the release
+    needs: [linux]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # to create the release
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          merge-multiple: true
+
+      - name: Write checksums
+        working-directory: dist
+        run: sha256sum -- * > SHA256SUMS.txt
+
+      - name: Create or update the release
+        run: |
+          version="${TAG#v}"
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            # The release was already made on the website: add the files.
+            gh release upload "$TAG" dist/* --clobber
+          else
+            sed "s/{{VERSION}}/$version/g" packaging/release-notes.md > notes.md
+            prerelease=""
+            case "$version" in *-*) prerelease="--prerelease" ;; esac
+            gh release create "$TAG" dist/* --draft --verify-tag $prerelease \
+              --title "LingQ Prep $version" --notes-file notes.md
+          fi
