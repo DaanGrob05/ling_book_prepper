@@ -3,3 +3,9 @@
 output/
 # packages made by "fyne package"
 *.tar.xz
+# temporary files "fyne package" writes into the source folder while
+# building; ignored so the build doesn't count as having local changes
+fyne_metadata_init.go
+fyne_pprof.go
+fyne.syso
+*.exe.manifest

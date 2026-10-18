@@ -8,6 +8,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"runtime/debug"
 	"strings"
 	"text/tabwriter"
 
@@ -24,6 +25,7 @@ Usage:
   lingqprep [flags] book.epub        write the lessons to ./<book>/
   lingqprep list [flags] book.epub   show the chapters and how they were classified
   lingqprep gui [book.epub]          open the graphical interface
+  lingqprep -version                 show which version this is
 
 Run "lingqprep -h" or "lingqprep list -h" to see the flags.
 `
@@ -37,6 +39,8 @@ func main() {
 	case len(os.Args) < 2:
 		fmt.Fprint(os.Stderr, usage)
 		os.Exit(2)
+	case os.Args[1] == "-version" || os.Args[1] == "--version":
+		fmt.Println("lingqprep", version())
 	// Preparing a book is the default; "list" and "gui" are the subcommands.
 	case os.Args[1] == "list":
 		err = runList(os.Args[2:])
@@ -49,6 +53,18 @@ func main() {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)
 	}
+}
+
+// version returns the version of this build. Since Go 1.24, "go build"
+// records the git tag of the commit it builds (e.g. "v1.2.0"), or a
+// pseudo-version such as "v0.0.0-20261018120000-abcdef123456" for an
+// untagged commit, with "+dirty" for uncommitted changes. "go run" and
+// tests record no version.
+func version() string {
+	if info, ok := debug.ReadBuildInfo(); ok && info.Main.Version != "" && info.Main.Version != "(devel)" {
+		return info.Main.Version
+	}
+	return "dev"
 }
 
 // inTerminal reports whether the program was started from a terminal. A

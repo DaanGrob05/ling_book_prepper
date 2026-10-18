@@ -31,7 +31,10 @@ command-line-only binary that needs no C compiler, build with
 
 The installable app is made with Fyne's packaging tool. Its settings (name,
 app ID, version, icon) are in `cmd/lingqprep/FyneApp.toml`; `Icon.png` next
-to it is a placeholder until there is a real logo.
+to it is a placeholder until there is a real logo. `fyne package` rewrites
+that file on every run (it raises `Build` by one), so don't keep comments in
+it. Its `Version` is only used for local packages: releases take the version
+from the git tag.
 
 ```sh
 go install fyne.io/tools/cmd/fyne@latest
@@ -79,6 +82,9 @@ correct them:
 ```sh
 ./lingqprep -body-from 4 -back-from 31 book.epub
 ```
+
+`lingqprep -version` shows the version: the git tag the binary was built
+from, such as `v1.2.0`, or a pseudo-version for an untagged commit.
 
 Other flags: `-lang fr`, `-max-words 6000`, `-force` (write into a
 non-empty directory). Run `lingqprep -h` for the full list.
