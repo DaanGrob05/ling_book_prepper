@@ -78,13 +78,17 @@ jobs:
       - name: Create or update the release
         run: |
           version="${TAG#v}"
+          prerelease=""
+          case "$version" in *-*) prerelease="--prerelease" ;; esac
           if gh release view "$TAG" > /dev/null 2>&1; then
-            # The release was already made on the website: add the files.
+            # The release was already made on the website: add the files,
+            # and make sure a beta isn't shown as the latest release.
             gh release upload "$TAG" dist/* --clobber
+            if [ -n "$prerelease" ]; then
+              gh release edit "$TAG" --prerelease
+            fi
           else
             sed "s/{{VERSION}}/$version/g" packaging/release-notes.md > notes.md
-            prerelease=""
-            case "$version" in *-*) prerelease="--prerelease" ;; esac
             gh release create "$TAG" dist/* --draft --verify-tag $prerelease \
               --title "LingQ Prep $version" --notes-file notes.md
           fi

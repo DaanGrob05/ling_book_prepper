@@ -6,7 +6,7 @@ LingQ Prep prepares ebooks (EPUB) for importing into [LingQ](https://www.lingq.c
 |---|---|
 | Linux (most PCs and laptops) | `LingQ-Prep-{{VERSION}}-Linux-x86_64.tar.xz` |
 
-`SHA256SUMS.txt` is only needed to check that a download is complete.
+`SHA256SUMS.txt` is only needed to check that a download is complete. The **Source code** files are for developers; you don't need them to use the app.
 
 ## Installing
 
