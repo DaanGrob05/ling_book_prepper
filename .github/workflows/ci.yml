@@ -1,0 +1,49 @@
+# Checks every push and pull request: formatting, vet and tests, for both
+# the full build (with the Fyne GUI) and the CLI-only build.
+name: CI
+
+on:
+  push:
+    branches: ["**"] # all branches, but not tags (those are for releases)
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: go.mod # also caches modules and build output
+
+      - name: Install GUI build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gcc libgl1-mesa-dev xorg-dev libwayland-dev libxkbcommon-dev wayland-protocols
+
+      - name: Check formatting
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            echo "These files need gofmt:"
+            echo "$unformatted"
+            exit 1
+          fi
+
+      - name: Vet
+        run: go vet ./...
+
+      - name: Test
+        run: go test ./...
+
+      - name: Vet and test the CLI-only build
+        env:
+          CGO_ENABLED: "0"
+        run: |
+          go vet -tags nogui ./...
+          go test -tags nogui ./...
