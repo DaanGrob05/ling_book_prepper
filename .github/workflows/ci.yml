@@ -12,7 +12,9 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    # The same system the release is built on: tag runs can only reuse
+    # build caches made on main, and only from the same OS version.
+    runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v5
 
